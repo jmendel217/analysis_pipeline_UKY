@@ -1,1 +1,1 @@
-1 - Raw sequencing data processed by Trim Galore to control quality.
+    1 - Raw sequencing data processed by Trim Galore to control quality.
