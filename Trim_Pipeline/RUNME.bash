@@ -1,32 +1,54 @@
 #!/bin/bash
 
-
 if [[ "$1" == "" || "$1" == "-h" ]] ; then
    echo "
-   Usage: ./RUNME.bash folder queue QOS
+   Usage: ./RUNME.bash folder filtration queue QOS
 
    folder	Path to the folder containing the raw reads. The raw reads must be in FastQ format,
    		and filenames must follow the format: <name>.<sis>.fastq, where <name> is the name
 		of the sample, and <sis> is 1 or 2 indicating which sister read the file contains.
 		Use only '1' as <sis> if you have single reads.
-   partition	select a partition (if no provided, shas will be used)
-   qos			select a quality of service (if no provided, normal will be used)
+   filtration	Method of contamination removal. Use 'fast' if you are removing general contamination,
+   		use 'human' if you need to remove human sequences as well. (if not provided, fast
+     		will be used)
+   partition	Select a partition (if not provided, shas will be used)
+   qos		Select a quality of service (if not provided, normal will be used)
    
    " >&2 ;
    exit 1 ;
 fi ;
-QUEUE=$2
+
+if [[ "$2" == "" || "$2" == "-h" ]] ; then
+   echo "
+   Usage: ./RUNME.bash folder filtration queue QOS
+
+   folder	Path to the folder containing the raw reads. The raw reads must be in FastQ format,
+   		and filenames must follow the format: <name>.<sis>.fastq, where <name> is the name
+		of the sample, and <sis> is 1 or 2 indicating which sister read the file contains.
+		Use only '1' as <sis> if you have single reads.
+   filtration	Method of contamination removal. Use 'fast' if you are removing general contamination,
+   		use 'human' if you need to remove human sequences as well. (if not provided, fast
+     		will be used)
+   partition	Select a partition (if not provided, shas will be used)
+   qos		Select a quality of service (if not provided, normal will be used)
+   
+   " >&2 ;
+   exit 1 ;
+fi ;
+
+QUEUE=$3
 if [[ "$QUEUE" == "" ]] ; then
    QUEUE="coa_mki314_uksr"
 fi ;
 
-QOS=$3
+QOS=$4
 if [[ "$QOS" == "" ]] ; then
    QOS="normal"
 fi ;
 
 
 dir=$(readlink -f $1) ;
+con=$(readlink -f $2) ;
 pac=$(dirname $(readlink -f $0)) ;
 cwd=$(pwd) ;
 
@@ -35,17 +57,35 @@ for i in 01.raw_reads 02.trimmed_reads 03.read_quality 04.trimmed_fasta hocort_o
    if [[ ! -d $i ]] ; then mkdir $i ; fi ;
 done ;
 
-for i in $dir/*.1.fastq ; do 
-   b=$(basename $i .1.fastq) ;
-   OPTS="SAMPLE=$b,FOLDER=$dir"
-   if [[ -e "$b.2.fastq" ]] ; then
-      mv "$b".1.fastq 01.raw_reads/ ;
-      mv "$b".2.fastq 01.raw_reads/ ;
-   else
-      mv "$b".1.fastq 01.raw_reads/ ;
-   fi
-   # Launch job
-   sbatch --export="$OPTS" -J "Trim-$b" --account=$QUEUE --partition=$QOS --error "$dir"/"Trim-$b"-%j.err -o "$dir"/"Trim-$b"-%j.out  $pac/run.pbs | grep .;
-done ;
+if [[ "$con" == "human" ]] ; then
+   for i in $dir/*.1.fastq ; do 
+      b=$(basename $i .1.fastq) ;
+      OPTS="SAMPLE=$b,FOLDER=$dir"
+      if [[ -e "$b.2.fastq" ]] ; then
+         mv "$b".1.fastq 01.raw_reads/ ;
+         mv "$b".2.fastq 01.raw_reads/ ;
+      else
+         mv "$b".1.fastq 01.raw_reads/ ;
+      fi
+      # Launch job
+      sbatch --export="$OPTS" -J "Trim-$b" --account=$QUEUE --partition=$QOS --error "$dir"/"Trim-$b"-%j.err -o "$dir"/"Trim-$b"-%j.out  $pac/run_human.pbs | grep .;
+   done ;
+elif [[ "$con" == "fast" ]] ; then
+   for i in $dir/*.1.fastq ; do 
+      b=$(basename $i .1.fastq) ;
+      OPTS="SAMPLE=$b,FOLDER=$dir"
+      if [[ -e "$b.2.fastq" ]] ; then
+         mv "$b".1.fastq 01.raw_reads/ ;
+         mv "$b".2.fastq 01.raw_reads/ ;
+      else
+         mv "$b".1.fastq 01.raw_reads/ ;
+      fi
+      # Launch job
+      sbatch --export="$OPTS" -J "Trim-$b" --account=$QUEUE --partition=$QOS --error "$dir"/"Trim-$b"-%j.err -o "$dir"/"Trim-$b"-%j.out  $pac/run_fast.pbs | grep .;
+   done ;
+else
+   echo "Error in filtration parameter, aborting..." >&2
+   exit 1
+fi ;
 
 echo 'Done'
