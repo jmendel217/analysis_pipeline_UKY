@@ -33,10 +33,11 @@ if [[ "$QOS" == "" ]] ; then
    QOS="normal"
 fi ;
 
-
 dir=$(readlink -f $1) ;
 pac=$(dirname $(readlink -f $0)) ;
 cwd=$(pwd) ;
+
+#---------------------------------------------------------
 
 cd $dir ;
 for i in 01.raw_reads 02.trimmed_reads 03.read_quality 04.trimmed_fasta hocort_out zz.TMP ; do
