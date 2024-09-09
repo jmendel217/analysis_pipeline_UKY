@@ -41,8 +41,7 @@ conda deactivate
 #---------------------------------------------------------
 # Tagging fastq
 
-conda activate trim-galore
-module load ruby
+conda activate ruby
 
 if [[ -e ../hocort_out/"$b".val_2.fq ]] ; then
    $enve/FastQ.tag.rb -i ../hocort_out/"$b".val_1.fq -p "$b-" -s "/1" -o "$b".1.tagged.fastq ;
