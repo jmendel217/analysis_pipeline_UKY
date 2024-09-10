@@ -4,11 +4,15 @@
 #SBATCH -t 12:00:00
 
 b=$SAMPLE
+
+# Change enveomics path to yours 
 enve=/project/mki314_uksr/enveomics/Scripts
+
 # The number of CPUs or threads
 THR=4
 
 #---------------------------------------------------------
+# Quality trimming
 
 echo "==[ 02.trimmed_reads: $(date) ]" ;
 cd "$FOLDER/02.trimmed_reads" ;
@@ -31,9 +35,9 @@ conda deactivate
 conda activate hocort
 
 if [[ -e ./"$b".2_val_2.fq ]] ; then
-   hocort map bowtie2 -x $FOLDER/human_genome/GRCh38_p14 -i ./"$b".1_val_1.fq ./"$b".2_val_2.fq -o ../hocort_out/"$b".val_1.fq ../hocort_out/"$b".val_2.fq
+   hocort map bowtie2 -x $FOLDER/human_genome/GRCh38_p14 -i ./"$b".1_val_1.fq ./"$b".2_val_2.fq -o ../hocort_out/"$b".filter_1.fq ../hocort_out/"$b".filter_2.fq
 else
-   hocort map bowtie2 -x $FOLDER/human_genome/GRCh38_p14 -i ./"$b".1_val_1.fq -o ../hocort_out/"$b".val_1.fq
+   hocort map bowtie2 -x $FOLDER/human_genome/GRCh38_p14 -i ./"$b".1_val_1.fq -o ../hocort_out/"$b".filter_1.fq
 fi ;
 
 conda deactivate
@@ -44,10 +48,10 @@ conda deactivate
 conda activate ruby
 
 if [[ -e ../hocort_out/"$b".val_2.fq ]] ; then
-   $enve/FastQ.tag.rb -i ../hocort_out/"$b".val_1.fq -p "$b-" -s "/1" -o "$b".1.tagged.fastq ;
-   $enve/FastQ.tag.rb -i ../hocort_out/"$b".val_2.fq -p "$b-" -s "/2" -o "$b".2.tagged.fastq ;
+   $enve/FastQ.tag.rb -i ../hocort_out/"$b".filter_1.fq -p "$b-" -s "/1" -o "$b".1.tagged.fastq ;
+   $enve/FastQ.tag.rb -i ../hocort_out/"$b".filter_2.fq -p "$b-" -s "/2" -o "$b".2.tagged.fastq ;
 else
-   $enve/FastQ.tag.rb -i ../hocort_out/"$b".val_1.fq -p "$b-" -s "/1" -o "$b".1.tagged.fastq ;
+   $enve/FastQ.tag.rb -i ../hocort_out/"$b".filter_1.fq -p "$b-" -s "/1" -o "$b".1.tagged.fastq ;
 fi
 
 #---------------------------------------------------------
