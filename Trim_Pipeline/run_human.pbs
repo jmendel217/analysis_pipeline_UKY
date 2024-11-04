@@ -17,6 +17,8 @@ THR=4
 echo "==[ 02.trimmed_reads: $(date) ]" ;
 cd "$FOLDER/02.trimmed_reads" ;
 
+echo $PATH
+
 source /project/mki314_uksr/miniconda3/etc/profile.d/conda.sh
 
 conda activate trim-galore
@@ -47,7 +49,7 @@ conda deactivate
 
 conda activate ruby
 
-if [[ -e ../hocort_out/"$b".val_2.fq ]] ; then
+if [[ -e ../hocort_out/"$b".filter_2.fq ]] ; then
    $enve/FastQ.tag.rb -i ../hocort_out/"$b".filter_1.fq -p "$b-" -s "/1" -o "$b".1.tagged.fastq ;
    $enve/FastQ.tag.rb -i ../hocort_out/"$b".filter_2.fq -p "$b-" -s "/2" -o "$b".2.tagged.fastq ;
 else
